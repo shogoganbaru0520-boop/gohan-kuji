@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <!-- スマホで正しい大きさに表示するためのおまじない -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ff7a45">
+  <title>福島のごはん屋さんくじ</title>
+  <!-- スマホのホーム画面に追加するための設定 -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="ごはんくじ">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <!-- ① タイトル -->
+    <header class="hero">
+      <div class="hero-icon">🍚</div>
+      <h1>福島のごはん屋さんくじ</h1>
+      <p class="hero-sub"><span id="area-name">郡山市</span>のお店 <span id="shop-count">0</span>軒から抽選</p>
+    </header>
+
+    <!-- ② 何を食べたいか入力 -->
+    <form id="search-form" class="search">
+      <label for="genre" class="label">何食べる？</label>
+      <div class="search-row">
+        <input id="genre" type="text" placeholder="例：ラーメン、飲み屋（空欄なら何でも）" autocomplete="off" enterkeyhint="go">
+      </div>
+      <div id="chips" class="chips"></div>
+      <label class="check"><input id="no-chain" type="checkbox"> チェーン店を除く</label>
+      <button id="draw-btn" class="draw-btn" type="submit">🎰 くじを引く</button>
+    </form>
+
+    <!-- ③ 結果 -->
+    <section id="result" class="result" aria-live="polite"></section>
+
+    <footer class="footer">
+      <p>お店データ: &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors（<span id="updated"></span> 取得）<br>★の評価や営業時間は、結果の「Googleマップ」ボタンから確認してね。</p>
+    </footer>
+  </main>
+
+  <!-- 設定 → お店リスト → 本体 の順に読み込む -->
+  <script src="config.js"></script>
+  <script src="shops.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // 電波がなくても開けるようにする係（サービスワーカー）を登録
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+      navigator.serviceWorker.register("sw.js");
+    }
+  </script>
+</body>
+</html>
