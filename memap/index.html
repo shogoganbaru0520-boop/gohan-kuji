@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <!-- スマホで正しい大きさに表示するためのおまじない -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f2140">
+  <title>MeMap</title>
+  <!-- スマホのホーム画面に追加するための設定 -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MeMap">
+  <link rel="stylesheet" href="lib/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ① 地図タブ：撮った写真がピンで並ぶ -->
+  <section id="view-map" class="view">
+    <div id="main-map" class="fill-map"></div>
+    <div class="map-top">
+      <input id="map-search" type="search" placeholder="写真を探す（場所・メモ・タグ）" autocomplete="off">
+    </div>
+    <button id="map-fit" class="round-btn map-fit" type="button" title="全部の写真が見えるように">⤢</button>
+    <div id="map-empty" class="empty-note" hidden>
+      <p>まだ写真がありません。<br>下の <b>＋</b> から写真を追加しよう。</p>
+    </div>
+  </section>
+
+  <!-- ② アルバムタブ：写真の一覧 -->
+  <section id="view-album" class="view" hidden>
+    <header class="album-head">
+      <h1>アルバム</h1>
+      <input id="album-search" type="search" placeholder="場所・メモ・タグで探す" autocomplete="off">
+      <div id="tag-chips" class="chips"></div>
+    </header>
+    <div id="album-grid" class="grid"></div>
+    <p id="album-empty" class="empty-note static" hidden>写真がありません。</p>
+  </section>
+
+  <!-- ③ 下のタブバー -->
+  <nav class="tabbar">
+    <button class="tab active" data-view="view-map" type="button"><span>🗺️</span>地図</button>
+    <button id="add-btn" class="add-btn" type="button" aria-label="写真を追加">＋</button>
+    <button class="tab" data-view="view-album" type="button"><span>🖼️</span>アルバム</button>
+  </nav>
+
+  <!-- 「＋」を押したときのメニュー -->
+  <div id="add-menu" class="sheet-back" hidden>
+    <div class="sheet small">
+      <button id="add-camera" class="menu-btn" type="button">📷 いま撮影する<small>撮った場所を GPS で自動記録</small></button>
+      <button id="add-library" class="menu-btn" type="button">🖼️ 写真を選ぶ<small>写真に入っている位置情報を使う（複数OK）</small></button>
+      <button class="menu-btn cancel" data-close type="button">キャンセル</button>
+    </div>
+  </div>
+  <input id="file-camera" type="file" accept="image/*" capture="environment" hidden>
+  <input id="file-library" type="file" accept="image/*" multiple hidden>
+
+  <!-- ④ 写真の詳細（下から出てくるシート） -->
+  <div id="detail" class="sheet-back" hidden>
+    <div class="sheet">
+      <button class="sheet-close" data-close type="button" aria-label="閉じる">✕</button>
+      <img id="dt-photo" class="dt-photo" alt="">
+      <div class="dt-body">
+        <h2 id="dt-place"></h2>
+        <p id="dt-date" class="muted"></p>
+        <p id="dt-memo" class="dt-memo"></p>
+        <div id="dt-tags" class="chips"></div>
+        <div id="dt-map" class="dt-map"></div>
+        <p id="dt-coord" class="coord"></p>
+        <div class="dt-actions">
+          <button id="dt-show" class="primary" type="button">この場所を地図で見る</button>
+          <a id="dt-google" class="secondary" target="_blank" rel="noopener">Googleマップで開く</a>
+          <button id="dt-edit" class="secondary" type="button">ピン・メモを編集</button>
+          <button id="dt-delete" class="danger" type="button">削除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ ピンの位置を合わせる画面（この アプリ の いちばん大事なところ） -->
+  <section id="editor" class="editor" hidden>
+    <header class="ed-head">
+      <button id="ed-cancel" class="icon-btn" type="button" aria-label="やめる">✕</button>
+      <h2>ピンの位置を合わせる <span id="ed-count"></span></h2>
+    </header>
+    <div class="ed-map-wrap">
+      <div id="ed-map" class="fill-map"></div>
+      <!-- 画面のまん中に固定されたピン。地図のほうを動かして、撮った場所に合わせる -->
+      <div class="crosshair" aria-hidden="true">
+        <div id="ed-dir" class="dir-fan" hidden></div>
+        <div class="cross-pin"></div>
+        <div class="cross-dot"></div>
+      </div>
+      <form id="ed-search" class="ed-search">
+        <input id="ed-q" type="search" placeholder="スポットを探す（例：ホグワーツ城）" autocomplete="off" enterkeyhint="search">
+        <button type="submit">検索</button>
+      </form>
+      <ul id="ed-results" class="ed-results" hidden></ul>
+      <div class="ed-tools">
+        <button id="ed-reset" class="round-btn" type="button" title="写真の元の位置に戻す">↺</button>
+        <button id="ed-locate" class="round-btn" type="button" title="現在地">◎</button>
+      </div>
+      <p id="ed-hint" class="ed-hint"></p>
+    </div>
+    <form id="ed-form" class="ed-form">
+      <div class="ed-photo-row">
+        <img id="ed-photo" alt="">
+        <p id="ed-coord" class="coord"></p>
+      </div>
+      <label>場所の名前
+        <span class="row">
+          <input id="ed-place" type="text" placeholder="例：USJ ホグワーツ城の橋の上" maxlength="80">
+          <button id="ed-lookup" type="button" class="secondary">名前を調べる</button>
+        </span>
+      </label>
+      <label>メモ
+        <textarea id="ed-memo" rows="2" maxlength="200" placeholder="例：夕方の光がきれいだった"></textarea>
+      </label>
+      <label>タグ（スペース区切り）
+        <input id="ed-tags" type="text" placeholder="例：旅行 USJ 夕日">
+      </label>
+      <button class="primary" type="submit" id="ed-save">保存</button>
+    </form>
+  </section>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- 地図の部品(Leaflet) → 写真の位置情報を読む部品(exifr) → 本体 の順に読み込む -->
+  <script src="lib/leaflet.js"></script>
+  <script src="lib/exifr.lite.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // 電波がなくても開けるようにする係（サービスワーカー）を登録
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+      navigator.serviceWorker.register("sw.js");
+    }
+  </script>
+</body>
+</html>

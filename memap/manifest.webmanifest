@@ -1,0 +1,16 @@
+{
+  "name": "MeMap 写真の撮影場所マップ",
+  "short_name": "MeMap",
+  "description": "写真を撮った正確な場所を、地図にピンで残すアプリ",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f2140",
+  "theme_color": "#0f2140",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
